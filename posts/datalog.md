@@ -1,12 +1,16 @@
 # An escape room(s) in Datalog
 
-Well this is more about state machines really but a game sounds more fun. I wrote a text based escape room in Clojurescript to test a library I have been working on, and wanted to share my experience. All of the game state is expressed as a Datascript database, all game actions are driven via Datalog queries. However, these queries are incremental and reactive, meaning every change in the result of a query is available after every transaction.
+Well this is more about state machines really but a game sounds more fun. 
 
-You can access the the game [here](https://jumraiya.github.io/posts/escape-room.html) .
+I wrote a text based escape room in Clojurescript to test a library I have been working on, and wanted to share my experience.
+
+All of the game state is expressed as a Datascript database, all game actions are driven via Datalog queries. However, these queries are incremental and reactive, meaning every change in the result of a query is available after every transaction.
+
+You can access the game [here](https://jumraiya.github.io/escape-room/index.html).
 
 Unfortunately the game is very slow to initialize and pretty short, I am still working on it.
 
-There is a view on the bottom made with portal that shows how user actions trigger state transitions.
+There is a view on the bottom made with portal shows how user actions update the game state.
 
 ## Why Datalog?
 
@@ -28,17 +32,11 @@ I find materialized views very compelling because they have several applications
 
 - Using incremental updates to views for building state machines.
 
-So far DBSP as mostly been applied to SQL databases, I think it could be a great fit for Datomic like databases because of the simplicity of the query language. The transaction log and eavt index readily provides all the changesets needed to implement a DBSP circuit.
+I think it could be a great fit for Datomic like databases because of the simplicity of the query language. 
+The transaction log and eavt index readily provides all the changesets needed to implement a DBSP circuit.
+This concept has already been implemented in production by the creators of DBSP, checkout [feldera](https://github.com/feldera/feldera) . Feldera is geared towards SQL databases.
 
-I think materialized views can also be applied on the client side. State management is a hard problem regardless of the domain, there are multiple tools like Reframe, Redux which help to synchronize state from the server and also manage complex state transitions in the UI. In my opinion there are two main orthogonal problems that need to be solved for state management on the client side.
-
-- Structuring state in a way that is easily navigable
-- Performing efficient updates on application state so that the UI can be updated accordingly
-
-I believe the first one is solved by simply using a database, in the clojure world we have Datascript which can run in the browser as well as in a JVM process.
-The second one could perhaps be handled by incremental views, so I set out to validate the idea.
-
-The following assumes we can register Datalog queries whose results are incrementally updated on each transaction and we have access to the diff as well.
+I think materialized views can also be applied on the client side. State management is a hard problem regardless of the domain, there are multiple tools like Reframe, Redux which help to synchronize state from the server and also manage complex state transitions in the UI.
 
 ## The escape room(s)
 
@@ -123,9 +121,6 @@ Finally we need to model objects present in the rooms. The player itself is also
  :object/location :my-room}
 ```
 
-If the player picks up something, it is means the object's location is the player i.e. `[:db/add object-id :object/location :player]`
-
-
 So how does the game state evolve as the player executes actions? We describe player actions as entities and use datalog queries to determine if the action is valid or not
 
 e.g. When a player attempts a move action
@@ -184,14 +179,39 @@ When a valid action is found, something like the following result is returned
 ```clojure
 #{[123 3431 true]}
 ```
-The `true` in the above tuple means that it should be added to the view, whereas `false` would mean it should be removed if it exists.
 
-Once we update the player's location, we can transact a datom marking this action as processed e.g. `[:db/add 123 :action/move-processed? true]`
+The handler for this query looks this
+```clojure
+(fn [adds _ _]
+    (when-let [[action-id new-loc locked?] (first adds)]
+      (let [tx (cond
+                 (true? locked?) (do (io/terminal-println "The door is locked") [])
+                 (not= :not-found new-loc)
+                 [[:db/add :player :object/location new-loc]]
+                 (= :not-found new-loc) (do (io/terminal-println "There is no door in that direction") [])
+                 :else [])]
+        (conj tx [:db/add action-id :action/move-processed? true]))))
+```
+We can see it performs some side effects as well returns some datoms, these datoms are transacted and can trigger other views. You can see similarities to Redux here.
 
 
-## Implementation
-The source code for the game is available [here](https://github.com/jumraiya/escape-room) . The most relevant namespace to look at is https://github.com/jumraiya/escape-room/blob/main/src/main/state_machine.cljs . It contains all the view definitions and the logic for state transitions. 
+## Implementation and downsides
+The game was made using [Wizard](https://github.com/jumraiya/wizard). It is an experimental Clojure(script) library which maintains incremental views of datalog queries in memory (Currently only supports Datascript). The logic in Wizard is based on ideas described in the DBSP paper but not exactly 1 to 1, for instance the ZSets don't have an associated count, instead just a true/false value indicating an assertion or a retraction. This means the queries in Wizard can only return sets. It is nowhere near ready for production applications but I hope to build more proof of concepts in the next few months.
+
+The source code for the game is available [here](https://github.com/jumraiya/escape-room) . The most relevant namespace to look at is [state-machine.cljs](https://github.com/jumraiya/escape-room/blob/main/src/main/state_machine.cljs) . It contains all the view definitions and the logic for state transitions. 
 Overall the game logic turned out to be more complex than I expected, it's perhaps because I am trying to account for a lot of inconsequential states. 
+Materialized views (at least the way I have implemented them) are expensive to initialize and consume a lot of memory. Although I think those deficiencies are not intractable (except maybe memory).
 
-The game was made by [Wizard](https://github.com/jumraiya/wizard). It is an experimental Clojure(script) library which maintains incremental views of datalog queries in memory (Currently only supports Datascript). The logic in Wizard is based on ideas described in the DBSP paper but not exactly 1 to 1, for instance the ZSets don't have an associated count, instead just a true/false value indicating an assertion or a retraction. This means the queries in Wizard can only return sets.
+
+## Ramblings about business logic and code
+I have been working as a backend engineer for a long time. I have experienced the pain of trying make sense of decades of accumulated code expressing business rules that have become incomprehensibly convoluted over time. Working on mutable SQL databases with inadequate event logging, and not being able to debug bugs. 
+
+That is not the fault of any particular technology or practice, entropy is a fact of life, and any long running system will eventually become disordered. That being said I think we can do better, working with Clojure and Datomic has changed how I think about state and mutability. Now I can't imagine building a real world application where immutability is not at the center. Even if your business logic becomes convoluted, you can retrace all mutations of data and make sense of what happened in the system at any given point.
+
+Most of business logic I have written can be boiled down to: receive some user input -> check current state (make db queries) -> mutate the system -> return new system state (make db queries + package it in json or something). Every time we mutate the system, we have to think about all the implications of that mutation in different contexts and write code that handles them appropriately.
+
+I believe if possible, business logic should be decoupled from code and expressed as data. I think that's doable to a certain degree simply with database queries. 
+It would be nice if our database just "told" us when something important happened and our system reacts appropriately. This is not a new concept, event driven systems exist already. However these "events" have to be derived in code and maintained at a cost. The value proposition of incremental views is that you can derive these events from base facts without having to build intermediate data structures. It's same as event sourcing, except events are defined as queries. 
+
+There is also [Rama](https://redplanetlabs.com/) which also relies on event sourcing and materialized views. This gives me a feeling that us engineers are reaching for the same thing but from different angles. Hopefully future generations of backend developers will have a much easier go at it!
 
