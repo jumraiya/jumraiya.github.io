@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>datalog</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="an-escape-rooms-in-datalog">An escape room(s) in Datalog</h1>
+<p>Well this is more about state machines really but a game sounds more
+fun. I wrote a text based escape room in Clojurescript to test a library
+I have been working on, and wanted to share my experience. All of the
+game state is expressed as a Datascript database, all game actions are
+driven via Datalog queries. However, these queries are incremental and
+reactive, meaning every change in the result of a query is available
+after every transaction.</p>
+<p>You can access the the game <a
+href="https://jumraiya.github.io/posts/escape-room.html">here</a> .</p>
+<p>Unfortunately the game is very slow to initialize and pretty short, I
+am still working on it.</p>
+<p>There is a view on the bottom made with portal that shows how user
+actions trigger state transitions.</p>
+<h2 id="why-datalog">Why Datalog?</h2>
+<ul>
+<li><p>Datalog is declarative and closer to pure logic programming.
+Other relational algebra languages like SQL while feature rich are more
+imperative and verbose.</p></li>
+<li><p>It is composable, logic can be expressed as rules and easily
+reused across queries.</p></li>
+<li><p>It supports mutiple access patterns e.g. Column, Row,
+Graph</p></li>
+</ul>
+<h2 id="incremental-materialized-views">Incremental materialized
+views</h2>
+<p>Last year I stumbled on a video by Mihai Budiu about <a
+href="https://www.youtube.com/watch?v=eYJA-ZBs-KM">DBSP</a> . I would
+recommend watching the video but the tldr is that Prof Budiu and others
+have created a theoretical framework which describes how to build
+incremental materialized views for databases. The research paper is
+available <a
+href="https://mihaibudiu.github.io/work/budiu-vldb23.pdf">here</a></p>
+<p>I find materialized views very compelling because they have several
+applications, for example</p>
+<ul>
+<li><p>Preemptively computing expensive queries on the server side and
+not having to rely on database index performance.</p></li>
+<li><p>Using incremental updates to views for building state
+machines.</p></li>
+</ul>
+<p>So far DBSP as mostly been applied to SQL databases, I think it could
+be a great fit for Datomic like databases because of the simplicity of
+the query language. The transaction log and eavt index readily provides
+all the changesets needed to implement a DBSP circuit.</p>
+<p>I think materialized views can also be applied on the client side.
+State management is a hard problem regardless of the domain, there are
+multiple tools like Reframe, Redux which help to synchronize state from
+the server and also manage complex state transitions in the UI. In my
+opinion there are two main orthogonal problems that need to be solved
+for state management on the client side.</p>
+<ul>
+<li>Structuring state in a way that is easily navigable</li>
+<li>Performing efficient updates on application state so that the UI can
+be updated accordingly</li>
+</ul>
+<p>I believe the first one is solved by simply using a database, in the
+clojure world we have Datascript which can run in the browser as well as
+in a JVM process. The second one could perhaps be handled by incremental
+views, so I set out to validate the idea.</p>
+<p>The following assumes we can register Datalog queries whose results
+are incrementally updated on each transaction and we have access to the
+diff as well.</p>
+<h2 id="the-escape-rooms">The escape room(s)</h2>
+<p>Let’s describe the game first</p>
+<p>The player is locked in a house with multiple rooms, the player has
+to solve puzzles, unlock doors to escape the house. There are several
+actions the player can take:</p>
+<ul>
+<li><p>Move in four directions (north, south, east, west). For
+simplicity’s sake we assume that the player is ALWAYS facing due north.
+The player cannot move within a room only between rooms.</p></li>
+<li><p>Inspect objects</p></li>
+<li><p>Pickup objects</p></li>
+<li><p>Interact with objects</p></li>
+</ul>
+<p>So how do we model this world?</p>
+<p>First we need to describe the house itself. We do that by creating
+entities for each room called <code>location</code> e.g.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:db/ident</span> <span class="at">:my-room</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:location/description</span> <span class="st">&quot;This is some room&quot;</span>}</span></code></pre></div>
+<p>then we need to model where the rooms are in relation to each other,
+since the only way the player can move between rooms is through doors it
+makes sense to model them as entities.</p>
+<pre><code>
+                    ┌────────────────────────┐
+                    │                        │
+                    │                        │
+                    │                        │
+                    │     :my-room           │
+                    │                        │
+                    │                        │
+                    │                        │
+                    │                        │
+                    │            │           │
+┌───────────────────┐────────────┼───────────┐
+│                   │            │           │
+│                   │                        │
+│                   │                        │
+│                   │                        │
+│     :third-room  ─┼──   :another-room      │
+│                   │                        │
+│                   │                        │
+│                   │                        │
+│                   │                        │
+└───────────────────┘────────────────────────┘</code></pre>
+<p>e.g.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:exit/location-1</span> <span class="at">:my-room</span>               </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/location-1-wall</span> <span class="at">:south</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/location-2</span> <span class="at">:another-room</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/location-2-wall</span> <span class="at">:north</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/locked</span>? <span class="va">false</span>}</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>{<span class="at">:exit/location-1</span> <span class="at">:my-room</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/location-1-wall</span> <span class="at">:west</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/location-2</span> <span class="at">:third-room</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/location-2-wall</span> <span class="at">:east</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a> <span class="at">:exit/locked</span>? <span class="va">false</span>}</span></code></pre></div>
+<p>here location-* is a ref to the location entity above and
+location-*-wall which wall it’s situated (when facing due north).</p>
+<p>Based on the above two entity types we can determine when a player
+can move to a different room. So for instance if the player is in
+<code>:my-room</code> then the only valid moves are to the south and
+west. Similarly if the player is in <code>:another-room</code> then they
+can only move north.</p>
+<p>Finally we need to model objects present in the rooms. The player
+itself is also represented as an object entity</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:object/description</span> <span class="st">&quot;object&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:object/detailed-description</span> <span class="st">&quot;Detailed description&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:object/location</span> <span class="at">:my-room</span>}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>{<span class="at">:object/description</span> <span class="st">&quot;player&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a> <span class="at">:db/ident</span> <span class="at">:player</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a> <span class="at">:object/location</span> <span class="at">:my-room</span>}</span></code></pre></div>
+<p>If the player picks up something, it is means the object’s location
+is the player
+i.e. <code>[:db/add object-id :object/location :player]</code></p>
+<p>So how does the game state evolve as the player executes actions? We
+describe player actions as entities and use datalog queries to determine
+if the action is valid or not</p>
+<p>e.g. When a player attempts a move action &gt; move west</p>
+<p>we transact an entity</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:action/type</span> <span class="at">:move</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:action/arg</span> <span class="st">&quot;west&quot;</span>}</span></code></pre></div>
+<p>We have a query that listens for that action and validates it.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>&#39;[<span class="at">:find</span> ?a ?dest ?locked</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">:in</span> $ <span class="va">%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">:where</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>             </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>             <span class="co">;; Listen for actions that haven&#39;t been processed</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>             [?action <span class="at">:action/type</span> <span class="at">:move</span>]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>             [?action <span class="at">:action/arg</span> ?wall]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>             (not-join [?action]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                 [?action <span class="at">:action/move-processed</span>? <span class="va">true</span>])</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>             <span class="co">;; Find the player&#39;s current location</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>             [?p <span class="at">:object/description</span> <span class="st">&quot;player&quot;</span>]</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>             [?p <span class="at">:object/location</span> ?loc]</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>             </span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>             <span class="co">;; Validate if the player can move based on current location</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>             (or-join [?loc ?wall ?dest ?locked]</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                      (<span class="kw">and</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/location-1</span> ?loc]</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/location-1-wall</span> ?wall]</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/location-2</span> ?dest]</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/locked</span>? ?locked])</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                      (<span class="kw">and</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/location-2</span> ?loc]</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/location-2-wall</span> ?wall]</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/location-1</span> ?dest]</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>                       [?exit <span class="at">:exit/locked</span>? ?locked])</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>                       </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>                       </span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>                      <span class="co">;; Fall through case, there is no door in that direction</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                      (<span class="kw">and</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>                       (not-join [?loc ?wall]</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>                                 (or-join [?loc ?wall]</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>                                          (<span class="kw">and</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>                                           [?e <span class="at">:exit/location-2</span> ?loc]</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>                                           [?e <span class="at">:exit/location-2-wall</span> ?wall])</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>                                          (<span class="kw">and</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>                                           [?e <span class="at">:exit/location-1</span> ?loc]</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>                                           [?e <span class="at">:exit/location-1-wall</span> ?wall])))</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>                       [(ground <span class="at">:not-found</span>) ?dest]</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>                       [(ground <span class="va">false</span>) ?locked]))]</span></code></pre></div>
+<p>When a valid action is found, something like the following result is
+returned</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>#{[<span class="dv">123</span> <span class="dv">3431</span> <span class="va">true</span>]}</span></code></pre></div>
+<p>The <code>true</code> in the above tuple means that it should be
+added to the view, whereas <code>false</code> would mean it should be
+removed if it exists.</p>
+<p>Once we update the player’s location, we can transact a datom marking
+this action as processed
+e.g. <code>[:db/add 123 :action/move-processed? true]</code></p>
+<h2 id="implementation">Implementation</h2>
+<p>The source code for the game is available <a
+href="https://github.com/jumraiya/escape-room">here</a> . The most
+relevant namespace to look at is
+https://github.com/jumraiya/escape-room/blob/main/src/main/state_machine.cljs
+. It contains all the view definitions and the logic for state
+transitions. Overall the game logic turned out to be more complex than I
+expected, it’s perhaps because I am trying to account for a lot of
+inconsequential states.</p>
+<p>The game was made by <a
+href="https://github.com/jumraiya/wizard">Wizard</a>. It is an
+experimental Clojure(script) library which maintains incremental views
+of datalog queries in memory (Currently only supports Datascript). The
+logic in Wizard is based on ideas described in the DBSP paper but not
+exactly 1 to 1, for instance the ZSets don’t have an associated count,
+instead just a true/false value indicating an assertion or a retraction.
+This means the queries in Wizard can only return sets.</p>
+</body>
+</html>

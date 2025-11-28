@@ -1,0 +1,45 @@
+.terminal{
+  background: blue;
+  color: white;
+  font-family: "Perfect DOS VGA 437", "PxPlus IBM VGA8", "DOS", "Courier New", monospace;
+  font-size: 16px;
+  line-height: 1.2;
+  padding: 10px;
+  height: 300px;
+  overflow: auto;
+  letter-spacing: 0.5px;
+}
+
+.line{
+  display: table;
+  width: 100%;
+}
+
+.terminal span{
+  display:table-cell; 
+  width:1px;
+}
+
+.terminal input{
+  display:table-cell; 
+  width:100%;
+  border: none;
+  background: blue;
+  color: white;
+  font-family: "Perfect DOS VGA 437", "PxPlus IBM VGA8", "DOS", "Courier New", monospace;
+  font-size: 16px;
+  outline: none;
+  letter-spacing: 0.5px;
+}
+
+.debug-terminal{
+  background: black;
+  color: #00ff00;
+  font-family: "Perfect DOS VGA 437", "PxPlus IBM VGA8", "DOS", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.2;
+  padding: 10px;
+  height: 300px;
+  overflow: auto;
+  letter-spacing: 0.5px;
+}
